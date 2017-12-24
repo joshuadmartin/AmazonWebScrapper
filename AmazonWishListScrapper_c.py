@@ -60,6 +60,9 @@ mWishListAddress = {'wishlist' : 'https://www.amazon.com/hz/wishlist/printview/P
                          };
 
 def run():
+    """
+    Run the main method of the program.
+    """
     
     try:
         workbook = openpyxl.load_workbook(EXCEL_FILE_NAME, read_only=False, guess_types=False);
@@ -80,6 +83,17 @@ def run():
     print('Done: Workbook saved')
 
 def dlWishList(wishListAddr, title):
+    """
+    Download an Amazon Wishlist.
+
+    Keyword arguments:
+    wishListAddr -- the wishlist web address
+    title -- the title of the Amazon wishlist
+    
+    Return:
+    If successful, then return a beautiful soup object.
+    Otherwise return none.  
+    """
     print('Downloading: ', title, 'from', wishListAddr)
     
     header = {
@@ -92,13 +106,21 @@ def dlWishList(wishListAddr, title):
         res.raise_for_status()
         soup = bs4.BeautifulSoup(res.text, "html.parser")
         
+        #return a soup object
         return soup;
     except requests.exceptions.HTTPError as e:
         print("Error: Could not connect to: " + wishListAddr)
         print(e)
+        #return none
         return None;
 
 def readAmazon(soup):
+    """
+    Read data in from from an Amazon Wishlist
+
+    Keyword arguments:
+    soup -- a Beautiful soup object to read from.
+    """
     
     firstRow = True
     for row in soup.table.children:
@@ -123,6 +145,13 @@ def readAmazon(soup):
             firstRow = False
                     
 def readExcel(workbook, wbTitle):
+    """
+    Read from an excel file.
+
+    Keyword arguments:
+    workbook -- the workbook to write too
+    wbTitle -- the workbook sheet to write to
+    """
     print('Reading: ', wbTitle, ' from ', EXCEL_FILE_NAME)
     try:
         sheet = workbook.get_sheet_by_name(wbTitle)
@@ -145,6 +174,13 @@ def readExcel(workbook, wbTitle):
         mWishList[item] = price
 
 def writeExcel(workbook, wbTitle):
+    """
+    Write to an excel file.
+
+    Keyword arguments:
+    workbook -- the workbook to write too
+    wbTitle -- the workbook sheet to write to
+    """
     print('Writing: ', wbTitle, ' to ', EXCEL_FILE_NAME)
     
     sheet = workbook.get_sheet_by_name(wbTitle)
@@ -175,30 +211,43 @@ def writeExcel(workbook, wbTitle):
     mWishList.clear()
 
 def colorHighLow(sheet, row, maxColumn):
-    try:
-        high = float(sheet[get_column_letter(COLUMN_START) + str(row)].value)
-    except TypeError:
+    """
+    Appy colors to significant cells.
+
+    Keyword arguments:
+    sheet -- the sheet being read/written too
+    row -- the row being read/written too
+    maxColumn -- the last column to read from
+    """
+    #Test for None in the first cell
+    if (sheet[get_column_letter(COLUMN_START) + str(row)].value == None):
+        sheet[get_column_letter(COLUMN_START) + str(row)].value = 0.0
         high = 0.0
-        
-    try:
-        low = float(sheet[get_column_letter(COLUMN_START) + str(row)].value)
-    except TypeError:
         low = 0.0
-            
-    sheet[get_column_letter(COLUMN_START) + str(row)].fill = NO_FILL
+    else:
+        high = sheet[get_column_letter(COLUMN_START) + str(row)].value
+        low =  sheet[get_column_letter(COLUMN_START) + str(row)].value
+        sheet[get_column_letter(COLUMN_START) + str(row)].fill = NO_FILL
     
+    #iterate through the row
     highCell = 'B' + str(row)
     lowCell = 'B' + str(row)
     for cell in range((COLUMN_START + 1), (maxColumn+1)):
-        temp = float(sheet[get_column_letter(cell) + str(row)].value)
-        sheet[get_column_letter(cell) + str(row)].fill = NO_FILL
-        if(temp > high):
+        if(sheet[get_column_letter(cell) + str(row)].value == None):
+            sheet[get_column_letter(cell) + str(row)].value = 0.0
+            temp = 0.0
+        else:
+            temp = float(sheet[get_column_letter(cell) + str(row)].value)
+            sheet[get_column_letter(cell) + str(row)].fill = NO_FILL
+            
+        if(temp >= high):
             high = temp
             highCell = get_column_letter(cell) + str(row)
         if(temp <= low or low == 0.0):
             low = temp
             lowCell = get_column_letter(cell) + str(row)
     
+    #color the cells
     if(high != low):
         sheet[highCell].fill = RED_FILL
     if(low == -1.0):
