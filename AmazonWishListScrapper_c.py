@@ -165,7 +165,7 @@ def writeExcel(workbook, wbTitle):
     
     rowCount = ROW_START
     for item, price in mWishList.items():
-        if(mWriteItem):
+        if(mWriteItem or sheet['A' + str(rowCount)].value == None):
             sheet['A' + str(rowCount)] = item
             
         sheet[get_column_letter(columnToWriteTo) + str(rowCount)] = price
@@ -175,9 +175,15 @@ def writeExcel(workbook, wbTitle):
     mWishList.clear()
 
 def colorHighLow(sheet, row, maxColumn):
-
-    high = float(sheet[get_column_letter(COLUMN_START) + str(row)].value)
-    low = float(sheet[get_column_letter(COLUMN_START) + str(row)].value)
+    try:
+        high = float(sheet[get_column_letter(COLUMN_START) + str(row)].value)
+    except TypeError:
+        high = 0.0
+        
+    try:
+        low = float(sheet[get_column_letter(COLUMN_START) + str(row)].value)
+    except TypeError:
+        low = 0.0
             
     sheet[get_column_letter(COLUMN_START) + str(row)].fill = NO_FILL
     
