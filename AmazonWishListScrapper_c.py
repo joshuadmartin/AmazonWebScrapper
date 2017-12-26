@@ -7,12 +7,11 @@ Description: Given an Amazon Wish list in print view, this
     app will scrap information and save it to an excel spread sheet.
 
 TO-DO:
--Create an excel file when one doesn't already exist.
--Open excel file after the script finishes running.
+-Take in system args to control operations such as:
+    +opening the excel file after running
+-Attach to a script that runs automatically.
 -Update to work on list that are not formatted for print view.
 -Attach URL's to the items in the excel file.
--Attach to a script that runs automatically.
--Create a backup of the excel file
 -Send an email when certain parameters have been reached.
     Such as a price has lowered under a specific threshold.
 
@@ -22,14 +21,15 @@ Created on Dec 18, 2017
 @author: joshua
 '''
 
-import requests, sys, bs4, openpyxl, datetime
+import requests, bs4, openpyxl, datetime, shutil, os
 
 from openpyxl.utils  import get_column_letter
 from openpyxl.styles import PatternFill
-
-EXCEL_FILE_NAME = 'wishlist.xlsx'
+from openpyxl import Workbook
 
 DATE_TODAY = datetime.datetime.now().strftime("%m-%d-%Y")
+EXCEL_FILE_NAME = 'wishlist.xlsx'
+EXCEL_BACKUP = 'wishlist' + DATE_TODAY + '.xlsx'
 
 #red is for the most expensive price
 #green is for the cheapest price
@@ -66,21 +66,32 @@ def run():
     
     try:
         workbook = openpyxl.load_workbook(EXCEL_FILE_NAME, read_only=False, guess_types=False);
+        print('Opening: ' + EXCEL_FILE_NAME)
     except IOError:
-        print("IOError: " + input + " does not exist.")
-        sys.exit(1)
+        print('Creating: ' + EXCEL_FILE_NAME)
+        workbook = Workbook()
+        #remove all sheets
+        for sheet in workbook:
+            workbook.remove_sheet(sheet)
     
     for title, addr in mWishListAddress.items():
+        print()
         readExcel(workbook, title) 
         soup = dlWishList(addr, title)
         if(soup != None):
             readAmazon(soup)  
             writeExcel(workbook, title)  
             
-        print()
-        
+    
+    print()    
     workbook.save('wishlist.xlsx')
-    print('Done: Workbook saved')
+    print('Done: Workbook saved to: ' + EXCEL_FILE_NAME)
+    
+    shutil.copy(EXCEL_FILE_NAME, EXCEL_BACKUP)
+    print('Done: Workbook backed up to: ' + EXCEL_BACKUP)
+    
+    #open the excel file
+    os.startfile(EXCEL_FILE_NAME)
 
 def dlWishList(wishListAddr, title):
     """
@@ -263,7 +274,7 @@ def printWishList():
 
 if __name__ == '__main__':
     run()
-
+    
 
 
     
