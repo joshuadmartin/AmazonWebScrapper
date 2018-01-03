@@ -27,9 +27,10 @@ from openpyxl.utils  import get_column_letter
 from openpyxl.styles import PatternFill
 from openpyxl import Workbook
 
-DATE_TODAY = datetime.datetime.now().strftime("%m-%d-%Y")
+DATE_TODAY = datetime.datetime.now().strftime("%Y-%m-%d")
 EXCEL_FILE_NAME = 'wishlist.xlsx'
 EXCEL_BACKUP = 'wishlist' + DATE_TODAY + '.xlsx'
+EXCEL_BACKUP_DIRECTORY = 'backup'
 
 #red is for the most expensive price
 #green is for the cheapest price
@@ -87,7 +88,10 @@ def run():
     workbook.save('wishlist.xlsx')
     print('Done: Workbook saved to: ' + EXCEL_FILE_NAME)
     
-    shutil.copy(EXCEL_FILE_NAME, EXCEL_BACKUP)
+    if(not os.path.exists(EXCEL_BACKUP_DIRECTORY)):
+        os.mkdir(EXCEL_BACKUP_DIRECTORY)
+        
+    shutil.copy(EXCEL_FILE_NAME, os.path.join(EXCEL_BACKUP_DIRECTORY, EXCEL_BACKUP))
     print('Done: Workbook backed up to: ' + EXCEL_BACKUP)
     
     #open the excel file
@@ -203,12 +207,12 @@ def writeExcel(workbook, wbTitle):
         if(DATE_TODAY != dateMaxColumn):
             #write to the next column
             columnToWriteTo = columnToWriteTo + 1
-            sheet[get_column_letter(columnToWriteTo) + str(1)] = datetime.datetime.now().strftime("%m-%d-%Y")
+            sheet[get_column_letter(columnToWriteTo) + str(1)] = DATE_TODAY
         #else if the date is the same overwrite the column
     else:
         #if it's the first time writing to the file
         columnToWriteTo = columnToWriteTo + 1    
-        sheet[get_column_letter(columnToWriteTo) + str(1)] = datetime.datetime.now().strftime("%m-%d-%Y")
+        sheet[get_column_letter(columnToWriteTo) + str(1)] = DATE_TODAY
     
     rowCount = ROW_START
     for item, price in mWishList.items():
